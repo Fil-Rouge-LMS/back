@@ -19,7 +19,10 @@ services:
       retries: 10
 
   api:
-    build: .
+    build:
+      context: .
+      args:
+        PORT: ${PORT}
     restart: unless-stopped
     environment:
       PORT: ${PORT}
