@@ -1,0 +1,66 @@
+# Vérifie automatiquement le projet NestJS après chaque push.
+name: Tests NestJS
+
+on:
+  push: # Le workflow se lance à chaque push, quelle que soit la branche.
+
+# Le workflow a seulement besoin de lire le contenu du dépôt.
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    # GitHub fournit une machine Linux temporaire pour exécuter les étapes.
+    runs-on: ubuntu-latest
+
+    # Démarre une base PostgreSQL temporaire pour les tests qui en ont besoin.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: app_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Variables de connexion à la base de test.
+    # Adapte leurs noms si le projet utilise une configuration différente.
+    env:
+      NODE_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: app_test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app_test
+
+    steps:
+      # Récupère les fichiers du dépôt sur la machine d'exécution.
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # Installe Node.js 22 et active la mise en cache des dépendances npm.
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Installe les dépendances définies dans package-lock.json.
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Applique les migrations avant les tests.
+      # Vérifiez que cette commande existe dans le package.json du projet.
+      - name: Exécuter les migrations
+        run: npm run migration:run
+
+      # Lance les tests Jest en mode non interactif.
+      - name: Lancer les tests
+        run: npm test -- --runInBand
