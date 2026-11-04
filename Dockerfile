@@ -13,6 +13,8 @@ ENV PORT=${PORT}
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+# SQL files read by dist/db/migrate.js (migrate service)
+COPY --from=build /app/src/db/migrations ./src/db/migrations
 USER node
 EXPOSE ${PORT}
 CMD ["node", "dist/main.js"]
