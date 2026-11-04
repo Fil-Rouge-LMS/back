@@ -56,11 +56,14 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
-      # Applique les migrations avant les tests.
-      # Vérifiez que cette commande existe dans le package.json du projet.
+      # Apply the migrations before the tests.
       - name: Exécuter les migrations
-        run: npm run migration:run
+        run: npm run db:migrate
 
-      # Lance les tests Jest en mode non interactif.
-      - name: Lancer les tests
-        run: npm test -- --runInBand
+      # Run the Vitest unit tests.
+      - name: Lancer les tests unitaires
+        run: npm test
+
+      # Run the end-to-end tests, which boot the whole application.
+      - name: Lancer les tests e2e
+        run: npm run test:e2e

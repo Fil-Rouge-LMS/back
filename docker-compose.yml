@@ -18,17 +18,35 @@ services:
       timeout: 5s
       retries: 10
 
+  # Applies the migrations then stops. Same image as the api, different command.
+  migrate:
+    build:
+      context: .
+    command: ["node", "dist/db/migrate.js"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+
   api:
-    build: .
+    build:
+      context: .
+      args:
+        PORT: ${PORT}
     restart: unless-stopped
     environment:
       PORT: ${PORT}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      CORS_ORIGIN: ${CORS_ORIGIN}
     ports:
       - "${PORT}:${PORT}"
     depends_on:
       db:
         condition: service_healthy
+      # the api only starts if the migrations succeeded
+      migrate:
+        condition: service_completed_successfully
 
   adminer:
     image: adminer
