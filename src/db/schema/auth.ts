@@ -17,6 +17,9 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
+  // true when an admin created the account with a temporary password:
+  // the user must choose a new password before going further.
+  mustUpdatePassword: boolean('must_update_password').default(false).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
